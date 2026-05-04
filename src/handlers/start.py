@@ -3,6 +3,7 @@ from pathlib import Path
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message, FSInputFile
+from src.keyboards.start import start_keyboard
 
 router = Router()
 
@@ -21,5 +22,6 @@ async def start_command(message: Message) -> None:
             "Я помогу тебе узнать твоё тотемное животное "
             "из Московского зоопарка.\n\n"
             "Нажми ниже, чтобы начать викторину!"
-        )
+        ),
+        reply_markup=start_keyboard()
     )
