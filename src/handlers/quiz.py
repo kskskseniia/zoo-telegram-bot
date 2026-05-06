@@ -1,9 +1,16 @@
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import FSInputFile
 
 from src.data.questions import QUESTIONS
 from src.states import QuizState
+from src.data.animals import ANIMALS
+
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+IMAGES_DIR = BASE_DIR / "assets" / "images"
 
 router = Router()
 
@@ -79,11 +86,14 @@ async def process_answer(callback: CallbackQuery, state: FSMContext) -> None:
     next_question_index = question_index + 1
 
     if next_question_index >= len(QUESTIONS):
-        result = max(scores, key=scores.get)
+        result_key = max(scores, key=scores.get)
+        animal = ANIMALS[result_key]
 
-        await callback.message.answer(
-            f"Викторина завершена! 🐾\n\n"
-            f"Твоё тотемное животное — {result}!",
+        photo = FSInputFile(IMAGES_DIR / animal["image"])
+
+        await callback.message.answer_photo(
+            photo=photo,
+            caption=f"{animal['description']}\n\n{animal['fact']}",
             reply_markup=result_keyboard()
         )
 
