@@ -34,6 +34,12 @@ def result_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
+                    text="Узнать об опеке ❤️",
+                    callback_data="about_guardianship"
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text="Пройти ещё раз 🔄",
                     callback_data="restart_quiz"
                 )
@@ -108,5 +114,18 @@ async def process_answer(callback: CallbackQuery, state: FSMContext) -> None:
             QUESTIONS[next_question_index]["text"],
             reply_markup=question_keyboard(next_question_index)
         )
+
+    await callback.answer()
+
+@router.callback_query(F.data == "about_guardianship")
+async def about_guardianship(callback: CallbackQuery) -> None:
+    await callback.message.answer(
+        "❤️ Программа «Возьми животное под опеку» помогает Московскому зоопарку "
+        "заботиться о животных.\n\n"
+        "Опекун вносит пожертвование на любую сумму, а средства идут на корм, "
+        "уход и улучшение условий жизни обитателей зоопарка.\n\n"
+        "Узнать больше можно на сайте Московского зоопарка:\n"
+        "https://moscowzoo.ru/about/guardianship"
+    )
 
     await callback.answer()
