@@ -2,10 +2,12 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.types import FSInputFile
+from aiogram.types import Message
 
 from src.data.questions import QUESTIONS
 from src.states import QuizState
 from src.data.animals import ANIMALS
+from src.config import ADMIN_ID
 
 from pathlib import Path
 
@@ -36,6 +38,12 @@ def result_keyboard() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text="Узнать об опеке ❤️",
                     callback_data="about_guardianship"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Связаться с сотрудником 📩",
+                    callback_data="contact_zoo"
                 )
             ],
             [
@@ -103,7 +111,11 @@ async def process_answer(callback: CallbackQuery, state: FSMContext) -> None:
             reply_markup=result_keyboard()
         )
 
-        await state.clear()
+        await state.set_state(QuizState.finished)
+        await state.update_data(
+            result_key=result_key,
+            result_name=animal["name"]
+        )
     else:
         await state.update_data(
             question_index=next_question_index,
@@ -129,3 +141,44 @@ async def about_guardianship(callback: CallbackQuery) -> None:
     )
 
     await callback.answer()
+
+@router.callback_query(F.data == "contact_zoo")
+async def contact_zoo(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(QuizState.contact)
+
+    await callback.message.answer(
+        "📩 Напиши свой вопрос сотруднику зоопарка одним сообщением.\n\n"
+        "Я передам его вместе с результатом твоей викторины."
+    )
+
+    await callback.answer()
+
+@router.message(QuizState.contact)
+async def process_contact_message(message: Message, state: FSMContext) -> None:
+    data = await state.get_data()
+
+    result_name = data.get("result_name", "результат не найден")
+
+    username = f"@{message.from_user.username}" if message.from_user.username else "username не указан"
+
+    admin_text = (
+        "📩 Новый вопрос по программе опеки\n\n"
+        f"Пользователь: {message.from_user.full_name}\n"
+        f"Telegram: {username}\n"
+        f"ID: {message.from_user.id}\n\n"
+        f"Результат викторины: {result_name}\n\n"
+        f"Вопрос:\n{message.text}"
+    )
+
+    await message.bot.send_message(
+        chat_id=ADMIN_ID,
+        text=admin_text
+    )
+
+    await message.answer(
+        "Спасибо! 🐾\n\n"
+        "Твой вопрос и результат викторины переданы сотруднику зоопарка.\n"
+        "Для демонстрации проекта сообщение отправляется администратору бота."
+    )
+
+    await state.set_state(QuizState.finished)
