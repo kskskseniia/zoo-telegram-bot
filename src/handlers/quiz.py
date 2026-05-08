@@ -149,7 +149,8 @@ async def about_guardianship(callback: CallbackQuery) -> None:
         "Опекун вносит пожертвование на любую сумму, а средства идут на корм, "
         "уход и улучшение условий жизни обитателей зоопарка.\n\n"
         "Узнать больше можно на сайте Московского зоопарка:\n"
-        "https://moscowzoo.ru/about/guardianship"
+        "https://moscowzoo.ru/about/guardianship",
+        reply_markup=back_to_result_keyboard()
     )
 
     await callback.answer()
@@ -190,7 +191,8 @@ async def process_contact_message(message: Message, state: FSMContext) -> None:
     await message.answer(
         "Спасибо! 🐾\n\n"
         "Твой вопрос и результат викторины переданы сотруднику зоопарка.\n"
-        "Для демонстрации проекта сообщение отправляется администратору бота."
+        "Для демонстрации проекта сообщение отправляется администратору бота.",
+        reply_markup=back_to_result_keyboard()
     )
 
     await state.set_state(QuizState.finished)
@@ -229,7 +231,8 @@ async def process_feedback_message(message: Message, state: FSMContext) -> None:
 
     await message.answer(
         "Спасибо за отзыв! 🐾\n\n"
-        "Он поможет сделать викторину лучше."
+        "Он поможет сделать викторину лучше.",
+        reply_markup=back_to_result_keyboard()
     )
 
     await state.set_state(QuizState.finished)
@@ -248,7 +251,50 @@ async def share_result(callback: CallbackQuery, state: FSMContext) -> None:
 
     await callback.message.answer(
         "📤 Скопируй этот текст и отправь друзьям:\n\n"
-        f"{share_text}"
+        f"{share_text}",
+        reply_markup=back_to_result_keyboard()
     )
 
     await callback.answer()
+
+
+@router.callback_query(F.data == "back_to_result")
+async def back_to_result(callback: CallbackQuery, state: FSMContext) -> None:
+    await callback.message.edit_reply_markup(reply_markup=None)
+
+    await show_result(callback, state)
+
+    await callback.answer()
+
+def back_to_result_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Вернуться к результату 🐾",
+                    callback_data="back_to_result"
+                )
+            ]
+        ]
+    )
+
+async def show_result(callback: CallbackQuery, state: FSMContext) -> None:
+    data = await state.get_data()
+
+    result_key = data.get("result_key")
+
+    if not result_key:
+        await callback.message.answer(
+            "Результат не найден. Пройди викторину ещё раз.",
+            reply_markup=result_keyboard()
+        )
+        return
+
+    animal = ANIMALS[result_key]
+    photo = FSInputFile(IMAGES_DIR / animal["image"])
+
+    await callback.message.answer_photo(
+        photo=photo,
+        caption=f"{animal['description']}\n\n{animal['fact']}",
+        reply_markup=result_keyboard()
+    )
