@@ -7,7 +7,7 @@ from aiogram.types import Message
 from src.data.questions import QUESTIONS
 from src.states import QuizState
 from src.data.animals import ANIMALS
-from src.config import ADMIN_ID
+from src.config import ADMIN_ID, BOT_USERNAME
 
 from pathlib import Path
 
@@ -246,7 +246,7 @@ async def share_result(callback: CallbackQuery, state: FSMContext) -> None:
     share_text = (
         f"🐾 Я прошёл викторину Московского зоопарка!\n\n"
         f"Моё тотемное животное — {result_name}.\n\n"
-        f"Пройди и ты: @zoo_ksks_bot"
+        f"Пройди и ты: @{BOT_USERNAME}"
     )
 
     await callback.message.answer(
