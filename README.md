@@ -181,6 +181,7 @@ python -m src.main
 
 - `BOT_TOKEN` — токен Telegram-бота;
 - `ADMIN_ID` — Telegram ID администратора.
+- 'BOT_USERNAME' - username Telegram-бота без символа `@`.
 
 ---
 
