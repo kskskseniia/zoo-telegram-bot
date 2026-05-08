@@ -5,3 +5,4 @@ class QuizState(StatesGroup):
     answering = State()
     finished = State()
     contact = State()
+    feedback = State()
