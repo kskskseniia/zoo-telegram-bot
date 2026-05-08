@@ -54,6 +54,12 @@ def result_keyboard() -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
+                    text="Поделиться результатом 📤",
+                    callback_data="share_result"
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text="Пройти ещё раз 🔄",
                     callback_data="restart_quiz"
                 )
@@ -227,3 +233,22 @@ async def process_feedback_message(message: Message, state: FSMContext) -> None:
     )
 
     await state.set_state(QuizState.finished)
+
+@router.callback_query(F.data == "share_result")
+async def share_result(callback: CallbackQuery, state: FSMContext) -> None:
+    data = await state.get_data()
+
+    result_name = data.get("result_name", "моё тотемное животное")
+
+    share_text = (
+        f"🐾 Я прошёл викторину Московского зоопарка!\n\n"
+        f"Моё тотемное животное — {result_name}.\n\n"
+        f"Пройди и ты: @zoo_ksks_bot"
+    )
+
+    await callback.message.answer(
+        "📤 Скопируй этот текст и отправь друзьям:\n\n"
+        f"{share_text}"
+    )
+
+    await callback.answer()
